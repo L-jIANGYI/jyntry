@@ -1,6 +1,6 @@
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { HashRouter, Routes, Route } from 'react-router';
 import { apps } from './registry';
 import Home from './home/Home';
 import Shell from './shell/Shell';
@@ -8,7 +8,7 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Home screen */}
         <Route path="/" element={<Home />} />
@@ -28,6 +28,6 @@ createRoot(document.getElementById('root')!).render(
           />
         ))}
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   </StrictMode>
 );
