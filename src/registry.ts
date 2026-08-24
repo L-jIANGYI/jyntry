@@ -18,4 +18,12 @@ export const apps: AppMeta[] = [
     colorTo: '#1D4ED8',
     component: lazy(() => import('./apps/calculator')),
   },
+  {
+    id: 'relationship',
+    name: 'Relationship',
+    icon: '👨‍👩‍👧‍👦',
+    color: '#F59E0B',
+    colorTo: '#B45309',
+    component: lazy(() => import('./apps/relationship')),
+  },
 ];
