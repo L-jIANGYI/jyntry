@@ -32,7 +32,7 @@ export default function Orbito() {
     setGame({
       board: createBoard(),
       currentPlayer: firstPlayer,
-      phase: 'move',
+      phase: 'place',
       selectedCell: null,
       winner: null,
       history: [],
