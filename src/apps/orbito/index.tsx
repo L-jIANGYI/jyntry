@@ -1,13 +1,44 @@
 import { useState } from 'react';
 import type { GameState, SetupState } from './types';
 import Setup from './Setup';
-import { createBoard, copyBoard, movePiece, placePiece, rotateBoard, checkWinner, getWinningLine } from './logic';
+import { createBoard, copyBoard, movePiece, placePiece, rotateBoard, getWinningLine } from './logic';
 import BoardUI from './Board';
 
 interface HistoryEntry {
   board: ReturnType<typeof createBoard>;
   currentPlayer: 1 | 2;
   phase: GameState['phase'];
+}
+
+function checkWinnerForPlayer(board: ReturnType<typeof createBoard>, player: 1 | 2): boolean {
+  const lines: [number, number][][] = [];
+  for (let i = 0; i < 4; i++) {
+    lines.push([
+      [i, 0],
+      [i, 1],
+      [i, 2],
+      [i, 3],
+    ]);
+    lines.push([
+      [0, i],
+      [1, i],
+      [2, i],
+      [3, i],
+    ]);
+  }
+  lines.push([
+    [0, 0],
+    [1, 1],
+    [2, 2],
+    [3, 3],
+  ]);
+  lines.push([
+    [0, 3],
+    [1, 2],
+    [2, 1],
+    [3, 0],
+  ]);
+  return lines.some((line) => line.every(([r, c]) => board[r][c] === player));
 }
 
 export default function Orbito() {
@@ -45,13 +76,15 @@ export default function Orbito() {
       phase: 'place',
       selectedCell: null,
       winner: null,
+      isDraw: false,
+      overtimeLeft: 0,
       history: [],
     });
   }
 
   function handlePlayAgain() {
     if (!setup || !game) return;
-    const next = game.winner === 1 ? 2 : 1;
+    const next = game.winner === 2 ? 1 : game.winner === 1 ? 2 : game.currentPlayer;
     startNewGame(next);
   }
 
@@ -60,9 +93,10 @@ export default function Orbito() {
   }
 
   function handleCellClick(row: number, col: number) {
-    if (!game || game.winner) return;
+    if (!game || game.winner || game.isDraw) return;
     const { board, phase, currentPlayer, selectedCell } = game;
 
+    // Skip move phase
     if (phase === 'move' && row === -1 && col === -1) {
       pushHistory(game);
       setGame((g) => (g ? { ...g, phase: 'place', selectedCell: null } : g));
@@ -109,21 +143,114 @@ export default function Orbito() {
   }
 
   function handleOrbit() {
-    if (!game || game.phase !== 'orbit') return;
+    if (!game) return;
+    if (game.phase !== 'orbit' && game.phase !== 'overtime') return;
+
     pushHistory(game);
     const newBoard = rotateBoard(game.board);
-    const winner = checkWinner(newBoard);
     const next = game.currentPlayer === 1 ? 2 : 1;
-    if (winner === 1) setScore1((s) => s + 1);
-    if (winner === 2) setScore2((s) => s + 1);
-    if (winner) setWinningLine(getWinningLine(newBoard));
+
+    const p1wins = checkWinnerForPlayer(newBoard, 1);
+    const p2wins = checkWinnerForPlayer(newBoard, 2);
+
+    // Both players line up simultaneously → draw
+    if (p1wins && p2wins) {
+      setWinningLine(null);
+      setGame((g) =>
+        g
+          ? {
+              ...g,
+              board: newBoard,
+              winner: null,
+              isDraw: true,
+              phase: 'move',
+              selectedCell: null,
+            }
+          : g
+      );
+      return;
+    }
+
+    const winner = p1wins ? 1 : p2wins ? 2 : null;
+
+    if (winner) {
+      if (winner === 1) setScore1((s) => s + 1);
+      if (winner === 2) setScore2((s) => s + 1);
+      setWinningLine(getWinningLine(newBoard));
+      setGame((g) =>
+        g
+          ? {
+              ...g,
+              board: newBoard,
+              winner,
+              isDraw: false,
+              phase: 'move',
+              selectedCell: null,
+            }
+          : g
+      );
+      return;
+    }
+
+    // Overtime orbit used up → draw
+    if (game.phase === 'overtime') {
+      const remaining = game.overtimeLeft - 1;
+      if (remaining <= 0) {
+        setGame((g) =>
+          g
+            ? {
+                ...g,
+                board: newBoard,
+                winner: null,
+                isDraw: true,
+                overtimeLeft: 0,
+                phase: 'move',
+                selectedCell: null,
+              }
+            : g
+        );
+      } else {
+        setGame((g) =>
+          g
+            ? {
+                ...g,
+                board: newBoard,
+                currentPlayer: next,
+                overtimeLeft: remaining,
+                phase: 'overtime',
+                selectedCell: null,
+              }
+            : g
+        );
+      }
+      return;
+    }
+
+    // Check if board is full after normal orbit → enter overtime
+    const isBoardFull = newBoard.every((row) => row.every((cell) => cell !== 0));
+    if (isBoardFull) {
+      setGame((g) =>
+        g
+          ? {
+              ...g,
+              board: newBoard,
+              currentPlayer: next,
+              overtimeLeft: 5,
+              phase: 'overtime',
+              selectedCell: null,
+            }
+          : g
+      );
+      return;
+    }
+
+    // Normal next turn
     setGame((g) =>
       g
         ? {
             ...g,
             board: newBoard,
-            winner,
-            currentPlayer: winner ? g.currentPlayer : next,
+            currentPlayer: next,
             phase: 'move',
             selectedCell: null,
           }
@@ -145,6 +272,7 @@ export default function Orbito() {
             phase: prev.phase,
             selectedCell: null,
             winner: null,
+            isDraw: false,
           }
         : g
     );
@@ -159,6 +287,8 @@ export default function Orbito() {
       currentPlayer={game.currentPlayer}
       selectedCell={game.selectedCell}
       winner={game.winner}
+      isDraw={game.isDraw}
+      overtimeLeft={game.overtimeLeft}
       winningLine={winningLine}
       onCellClick={handleCellClick}
       onOrbit={handleOrbit}
