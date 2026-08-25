@@ -2,7 +2,7 @@ export type Cell = 0 | 1 | 2; // 0 = empty, 1 = player1, 2 = player2
 
 export type Board = Cell[][]; // 4x4
 
-export type Phase = 'move' | 'place' | 'orbit'; // current step in turn
+export type Phase = 'move' | 'place' | 'orbit' | 'overtime';
 
 export interface Player {
   id: 1 | 2;
@@ -15,6 +15,8 @@ export interface GameState {
   phase: Phase;
   selectedCell: [number, number] | null; // for move phase: which opponent piece is selected
   winner: 1 | 2 | null;
+  isDraw: boolean;
+  overtimeLeft: number;
   history: Board[]; // for undo
 }
 
