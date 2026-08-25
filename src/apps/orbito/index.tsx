@@ -4,9 +4,16 @@ import Setup from './Setup';
 import { createBoard, copyBoard, movePiece, placePiece, rotateBoard, checkWinner, getWinningLine } from './logic';
 import BoardUI from './Board';
 
+interface HistoryEntry {
+  board: ReturnType<typeof createBoard>;
+  currentPlayer: 1 | 2;
+  phase: GameState['phase'];
+}
+
 export default function Orbito() {
   const [setup, setSetup] = useState<SetupState | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [score1, setScore1] = useState(0);
   const [score2, setScore2] = useState(0);
   const [winningLine, setWinningLine] = useState<[number, number][] | null>(null);
@@ -16,6 +23,7 @@ export default function Orbito() {
     setScore1(0);
     setScore2(0);
     setWinningLine(null);
+    setHistory([]);
     startNewGame(s.firstPlayer);
   }
 
@@ -25,10 +33,12 @@ export default function Orbito() {
     setScore1(0);
     setScore2(0);
     setWinningLine(null);
+    setHistory([]);
   }
 
   function startNewGame(firstPlayer: 1 | 2) {
     setWinningLine(null);
+    setHistory([]);
     setGame({
       board: createBoard(),
       currentPlayer: firstPlayer,
@@ -45,13 +55,12 @@ export default function Orbito() {
     startNewGame(next);
   }
 
-  function saveHistory(g: GameState): GameState {
-    return { ...g, history: [...g.history, copyBoard(g.board)] };
+  function pushHistory(g: GameState) {
+    setHistory((h) => [...h, { board: copyBoard(g.board), currentPlayer: g.currentPlayer, phase: g.phase }]);
   }
 
   function handleCellClick(row: number, col: number) {
     if (!game || game.winner) return;
-
     const { board, phase, currentPlayer, selectedCell } = game;
 
     if (phase === 'move' && row === -1 && col === -1) {
@@ -65,34 +74,21 @@ export default function Orbito() {
 
       if (selectedCell) {
         const [sr, sc] = selectedCell;
-
         if (sr === row && sc === col) {
           setGame((g) => (g ? { ...g, selectedCell: null } : g));
           return;
         }
-
         const valid = Math.abs(sr - row) + Math.abs(sc - col) === 1 && board[row][col] === 0;
-
         if (valid) {
+          pushHistory(game);
           const newBoard = movePiece(board, [sr, sc], [row, col]);
-          setGame((g) =>
-            g
-              ? saveHistory({
-                  ...g,
-                  board: newBoard,
-                  phase: 'place',
-                  selectedCell: null,
-                })
-              : g
-          );
+          setGame((g) => (g ? { ...g, board: newBoard, phase: 'place', selectedCell: null } : g));
           return;
         }
-
         if (cell === opponent) {
           setGame((g) => (g ? { ...g, selectedCell: [row, col] } : g));
           return;
         }
-
         setGame((g) => (g ? { ...g, selectedCell: null } : g));
         return;
       }
@@ -105,76 +101,55 @@ export default function Orbito() {
 
     if (phase === 'place') {
       if (board[row][col] !== 0) return;
+      pushHistory(game);
       const newBoard = placePiece(board, row, col, currentPlayer);
-      setGame((g) =>
-        g
-          ? saveHistory({
-              ...g,
-              board: newBoard,
-              phase: 'orbit',
-              selectedCell: null,
-            })
-          : g
-      );
-      return;
+      setGame((g) => (g ? { ...g, board: newBoard, phase: 'orbit', selectedCell: null } : g));
     }
   }
 
   function handleOrbit() {
     if (!game || game.phase !== 'orbit') return;
-
+    pushHistory(game);
     const newBoard = rotateBoard(game.board);
     const winner = checkWinner(newBoard);
     const next = game.currentPlayer === 1 ? 2 : 1;
-
     if (winner === 1) setScore1((s) => s + 1);
     if (winner === 2) setScore2((s) => s + 1);
-
     if (winner) setWinningLine(getWinningLine(newBoard));
-
     setGame((g) =>
       g
-        ? saveHistory({
+        ? {
             ...g,
             board: newBoard,
             winner,
             currentPlayer: winner ? g.currentPlayer : next,
             phase: 'move',
             selectedCell: null,
-          })
-        : g
-    );
-  }
-
-  function handleUndo() {
-    if (!game || game.history.length === 0) return;
-
-    const prev = game.history[game.history.length - 1];
-    const newHistory = game.history.slice(0, -1);
-
-    let phase = game.phase;
-    if (game.phase === 'orbit') phase = 'place';
-    else if (game.phase === 'place') phase = 'move';
-    else phase = 'orbit';
-
-    setGame((g) =>
-      g
-        ? {
-            ...g,
-            board: prev,
-            history: newHistory,
-            phase,
-            selectedCell: null,
-            winner: null,
-            currentPlayer: phase === 'move' ? (g.currentPlayer === 1 ? 2 : 1) : g.currentPlayer,
           }
         : g
     );
   }
 
-  if (!setup || !game) {
-    return <Setup onStart={handleStart} />;
+  function handleUndo() {
+    if (!game || history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setWinningLine(null);
+    setGame((g) =>
+      g
+        ? {
+            ...g,
+            board: prev.board,
+            currentPlayer: prev.currentPlayer,
+            phase: prev.phase,
+            selectedCell: null,
+            winner: null,
+          }
+        : g
+    );
   }
+
+  if (!setup || !game) return <Setup onStart={handleStart} />;
 
   return (
     <BoardUI
@@ -189,7 +164,7 @@ export default function Orbito() {
       onUndo={handleUndo}
       onNewGame={handlePlayAgain}
       onRestart={handleRestart}
-      canUndo={game.history.length > 0}
+      canUndo={history.length > 0}
       player1Name={setup.player1Name}
       player2Name={setup.player2Name}
       score1={score1}
