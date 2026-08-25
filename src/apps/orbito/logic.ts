@@ -34,7 +34,7 @@ const ORBIT_PATH_INNER: [number, number][] = [
   [2, 1],
 ];
 
-// Rotate all pieces clockwise by one step along their orbit ring
+// Rotate all pieces anticlockwise by one step along their orbit ring
 export function rotateBoard(board: Board): Board {
   const next = createBoard();
 
@@ -42,7 +42,7 @@ export function rotateBoard(board: Board): Board {
     const len = path.length;
     for (let i = 0; i < len; i++) {
       const [r, c] = path[i];
-      const [nr, nc] = path[(i + 1) % len]; // clockwise: current moves to next
+      const [nr, nc] = path[(i - 1 + len) % len]; // anticlockwise
       next[nr][nc] = board[r][c];
     }
   }
