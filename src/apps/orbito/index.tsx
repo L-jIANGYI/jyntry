@@ -64,6 +64,7 @@ export default function Orbito() {
     const { board, phase, currentPlayer, selectedCell } = game;
 
     if (phase === 'move' && row === -1 && col === -1) {
+      pushHistory(game);
       setGame((g) => (g ? { ...g, phase: 'place', selectedCell: null } : g));
       return;
     }
