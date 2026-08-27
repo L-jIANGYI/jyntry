@@ -34,4 +34,12 @@ export const apps: AppMeta[] = [
     colorTo: '#9D174D',
     component: lazy(() => import('./apps/orbito')),
   },
+  {
+    id: 'currency',
+    name: 'Currency',
+    icon: '💱',
+    color: '#10B981',
+    colorTo: '#065F46',
+    component: lazy(() => import('./apps/currency')),
+  },
 ];
