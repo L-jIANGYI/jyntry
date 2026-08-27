@@ -78,7 +78,6 @@ export default function Orbito() {
       winner: null,
       isDraw: false,
       overtimeLeft: 0,
-      history: [],
     });
   }
 

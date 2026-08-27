@@ -17,7 +17,6 @@ export interface GameState {
   winner: 1 | 2 | null;
   isDraw: boolean;
   overtimeLeft: number;
-  history: Board[]; // for undo
 }
 
 export interface SetupState {
