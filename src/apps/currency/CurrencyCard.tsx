@@ -15,7 +15,7 @@ export default function CurrencyCard({ code, name, rate, amount, base, isBase, o
   const converted = formatRate(code, rate * amount);
 
   return (
-    <button
+    <div
       onClick={() => onSelect(code)}
       className={`w-full flex items-center gap-3 rounded-2xl p-4 transition-all cursor-pointer border text-left
         ${isBase ? 'bg-white/15 border-white/40' : 'bg-white/5 border-transparent hover:bg-white/10'}`}
@@ -44,6 +44,6 @@ export default function CurrencyCard({ code, name, rate, amount, base, isBase, o
       >
         ×
       </button>
-    </button>
+    </div>
   );
 }
