@@ -6,4 +6,13 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   base: '/jyntry/',
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api/frankfurter': {
+        target: 'https://api.frankfurter.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/frankfurter/, ''),
+      },
+    },
+  },
 });
