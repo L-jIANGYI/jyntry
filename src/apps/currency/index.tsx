@@ -32,6 +32,7 @@ export default function Currency() {
         setDate(result.date);
       })
       .catch(() => setError('Failed to load rates.'))
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       .finally(() => setLoading(false));
   }, [base]);
 
@@ -67,7 +68,7 @@ export default function Currency() {
 
           <div className="ml-auto">
             <input
-              type="text"
+              type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-32 bg-white/10 border border-white/15 rounded-xl text-white text-right text-xl font-light outline-none px-4 py-2 focus:border-white/30 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -76,6 +77,9 @@ export default function Currency() {
             />
           </div>
         </div>
+
+        {loading && <p className="text-white/40 text-sm text-center py-8">Loading...</p>}
+        {error && <p className="text-red-400 text-sm text-center py-4">{error}</p>}
 
         {/* CurrencyCard */}
         {!loading && !error && (
