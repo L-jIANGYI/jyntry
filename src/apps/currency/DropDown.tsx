@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getFlagUrl, MAX_PINNED } from './data';
+import { getFlagUrl, MAX_PINNED } from './utils/data';
 
 interface Props {
   selected: string;

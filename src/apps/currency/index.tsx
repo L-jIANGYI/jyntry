@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import CurrencyCard from './CurrencyCard';
 import Dropdown from './DropDown';
-import { fetchCurrencies, fetchRates } from './api';
-import { DEFAULT_PINNED, getFlagUrl } from './data';
+import { fetchCurrencies, fetchRates } from './utils/api';
+import { DEFAULT_PINNED, getFlagUrl } from './utils/data';
 
 export default function Currency() {
   const [currencies, setCurrencies] = useState<Record<string, string>>({});

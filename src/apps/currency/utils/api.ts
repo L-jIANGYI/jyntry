@@ -1,4 +1,4 @@
-import type { RatesCache } from './types';
+import type { RatesCache } from '../types';
 
 const ratesCache = new Map<string, RatesCache>();
 let currenciesCache: Record<string, string> | null = null;
