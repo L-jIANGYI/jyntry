@@ -3,7 +3,7 @@ import type { RatesCache } from '../types';
 const ratesCache = new Map<string, RatesCache>();
 let currenciesCache: Record<string, string> | null = null;
 
-const BASE_URL = import.meta.env.DEV ? '/api/frankfurter' : 'https://api.frankfurter.app';
+const BASE_URL = import.meta.env.DEV ? '/api/frankfurter' : 'https://frankfurter.dev';
 
 export async function fetchCurrencies(): Promise<Record<string, string>> {
   if (currenciesCache) return currenciesCache;
