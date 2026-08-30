@@ -44,6 +44,17 @@ export default function Currency() {
     setPinned((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
   }
 
+  function handleCardClick(code: string) {
+    setBase(code);
+    setAmount('1');
+  }
+
+  function removePin(code: string) {
+    setPinned((prev) => prev.filter((c) => c !== code));
+  }
+
+  const numAmount = parseFloat(amount) || 0;
+
   return (
     <div className="min-h-full p-4 md:p-6">
       <div className="max-w-2xl mx-auto flex flex-col gap-4">
@@ -52,7 +63,7 @@ export default function Currency() {
           <img src={getFlagUrl(base)} alt="" className="w-10 h-7 object-cover rounded-md flex-shrink-0" />
 
           {/* Dropdown */}
-          <Dropdown selected={base} pinned={pinned} currencies={currencies} onSelect={handleSelectBase} onTogglePin={togglePin}></Dropdown>
+          <Dropdown selected={base} pinned={pinned} currencies={currencies} onSelect={handleSelectBase} onTogglePin={togglePin} />
 
           <div className="ml-auto">
             <input
@@ -67,9 +78,31 @@ export default function Currency() {
         </div>
 
         {/* CurrencyCard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <CurrencyCard></CurrencyCard>
-        </div>
+        {!loading && !error && (
+          <>
+            {pinned.length === 0 ? (
+              <p className="text-white/20 text-sm text-center py-8">Open the dropdown to pin currencies</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {pinned.map((code) => (
+                  <CurrencyCard
+                    key={code}
+                    code={code}
+                    name={currencies[code] ?? code}
+                    rate={rates[code] ?? 0}
+                    amount={numAmount}
+                    base={base}
+                    isBase={code === base}
+                    onSelect={handleCardClick}
+                    onRemove={removePin}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {date && <p className="text-white/20 text-xs text-center pb-2">Updated {date} · Rates by Frankfurter / ECB</p>}
       </div>
     </div>
   );
