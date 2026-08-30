@@ -1,6 +1,6 @@
 export const MAX_PINNED = 12;
 
-export const DEFAULT_PINNED = ['EUR', 'USD', 'CNY', 'GBP', 'HKD', 'SGD'];
+export const DEFAULT_PINNED = ['EUR', 'USD', 'CNY', 'GBP'];
 
 export const BIG_UNIT = new Set(['JPY', 'KRW', 'IDR', 'VND']);
 

@@ -4,6 +4,21 @@ import Dropdown from './DropDown';
 import { fetchCurrencies, fetchRates } from './utils/api';
 import { DEFAULT_PINNED, getFlagUrl } from './utils/data';
 
+const STORAGE_KEY = 'currency:pinned';
+
+function loadPinned(): string[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : DEFAULT_PINNED;
+  } catch {
+    return DEFAULT_PINNED;
+  }
+}
+
+function savePinned(pinned: string[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(pinned));
+}
+
 export default function Currency() {
   const [currencies, setCurrencies] = useState<Record<string, string>>({});
   const [base, setBase] = useState('EUR');
@@ -12,7 +27,7 @@ export default function Currency() {
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [pinned, setPinned] = useState<string[]>(DEFAULT_PINNED);
+  const [pinned, setPinned] = useState<string[]>(loadPinned);
 
   // fetch currency list once on mount
   useEffect(() => {
@@ -42,7 +57,11 @@ export default function Currency() {
   }
 
   function togglePin(code: string) {
-    setPinned((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
+    setPinned((prev) => {
+      const next = prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code];
+      savePinned(next);
+      return next;
+    });
   }
 
   function handleCardClick(code: string) {
@@ -51,7 +70,11 @@ export default function Currency() {
   }
 
   function removePin(code: string) {
-    setPinned((prev) => prev.filter((c) => c !== code));
+    setPinned((prev) => {
+      const next = prev.filter((c) => c !== code);
+      savePinned(next);
+      return next;
+    });
   }
 
   const numAmount = parseFloat(amount) || 0;
